@@ -55,14 +55,14 @@ public class BackgroundUsbService extends IntentService {
 		super("BackgroundUsbService");
 	}
 
-	Notification getNotification() {
+	Notification createNotification(String accessoryDescription) {
 
 		Notification notification = new Notification(android.R.drawable.ic_menu_info_details,
 				"Accessory connected", System.currentTimeMillis());
 		
 		Context context = getApplicationContext();
 		CharSequence contentTitle = "USB Accessory connected";
-		CharSequence contentText = "Background USB Demo Accessory connected";
+		CharSequence contentText = accessoryDescription + " connected";
 
 		// This can be changed if we want to launch an activity when notification clicked
 		Intent notificationIntent = new Intent();
@@ -75,28 +75,40 @@ public class BackgroundUsbService extends IntentService {
 	}
 	
 	@Override
-	protected void onHandleIntent(Intent arg0) {
-
-		Log.d(TAG, "onHandleIntent entered");
-
-		startForeground(NOTIFICATION_ID, getNotification());
-
-		// Register to receive detached messages
-		IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
-		registerReceiver(mUsbReceiver, filter);
-
-		while(true) {
-			// Wait until the accessory detachment is flagged
-			if (accessoryDetached) {
-				break;
-			}
-
-			// In reality we'd do stuff here.
+	protected void onHandleIntent(Intent theIntent) {
+		
+		Log.d(TAG, "onHandleIntent entered");		
+		
+		// The necessary extras should've been added by `fillIn()` call in Activity.
+        UsbAccessory accessory = UsbManager.getAccessory(theIntent);
+        
+        if (accessory != null) {
+			Log.d(TAG, "Got accessory: " + accessory.getModel());
 			
-			SystemClock.sleep(10);
+			// TODO: Check this order is okay or do we risk getting killed?
+			startForeground(NOTIFICATION_ID, createNotification(accessory.getDescription()));
+
+			// Register to receive detached messages
+			IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
+			registerReceiver(mUsbReceiver, filter);
+
+			while(true) {
+				// Wait until the accessory detachment is flagged
+				if (accessoryDetached) {
+					break;
+				}
+
+				// In reality we'd do stuff here.
+				
+				SystemClock.sleep(10);
+			}		
+			
+			stopForeground(true);
+			
+		} else {
+			Log.d(TAG, "No accessory found.");
 		}
 		
-		stopForeground(true);
 		stopSelf();
 		
 		Log.d(TAG, "onHandleIntent exited");		
