@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -79,8 +80,21 @@ public class BackgroundUsbService extends IntentService {
 		Log.d(TAG, "onHandleIntent entered");
 
 		startForeground(NOTIFICATION_ID, getNotification());
-		
-		SystemClock.sleep(5000);
+
+		// Register to receive detached messages
+		IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
+		registerReceiver(mUsbReceiver, filter);
+
+		while(true) {
+			// Wait until the accessory detachment is flagged
+			if (accessoryDetached) {
+				break;
+			}
+
+			// In reality we'd do stuff here.
+			
+			SystemClock.sleep(10);
+		}
 		
 		stopForeground(true);
 		stopSelf();
