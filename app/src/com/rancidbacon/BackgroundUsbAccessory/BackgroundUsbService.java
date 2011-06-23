@@ -47,6 +47,7 @@ public class BackgroundUsbService extends IntentService {
 		SystemClock.sleep(5000);
 		
 		stopForeground(true);
+		stopSelf();
 		
 		Log.d(TAG, "onHandleIntent exited");		
 	}
