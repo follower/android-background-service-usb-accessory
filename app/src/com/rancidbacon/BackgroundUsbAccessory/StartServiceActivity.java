@@ -19,6 +19,13 @@ public class StartServiceActivity extends Activity {
         Intent intent = new Intent(this, BackgroundUsbService.class);
         startService(intent);
 		
+        // See:
+        //
+        //    <http://permalink.gmane.org/gmane.comp.handhelds.android.devel/154481> &
+        //    <http://stackoverflow.com/questions/5567312/android-how-to-execute-main-fucntionality-of-project-only-by-clicking-on-the-ic/5567514#5567514>
+        //
+        // for combination of `Theme.NoDisplay` and `finish()` in `onCreate()`/`onResume()`.
+        //
         finish();
 		
         Log.d(TAG, "onCreate exited");
