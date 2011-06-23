@@ -1,0 +1,5 @@
+# use glob syntax.
+syntax: glob
+
+app/bin/*
+app/gen/*
