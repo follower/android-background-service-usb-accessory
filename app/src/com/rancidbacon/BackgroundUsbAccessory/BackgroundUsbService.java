@@ -1,8 +1,12 @@
 package com.rancidbacon.BackgroundUsbAccessory;
 
+import com.android.future.usb.UsbAccessory;
+import com.android.future.usb.UsbManager;
+
 import android.app.IntentService;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
@@ -14,6 +18,38 @@ public class BackgroundUsbService extends IntentService {
 
 	private static final int NOTIFICATION_ID = 1;    
     
+	private boolean accessoryDetached = false;
+	
+	// We use this to catch the USB accessory detached message
+	private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+	    public void onReceive(Context context, Intent intent) {
+	        final String TAG = "mUsbReceiver";
+
+	        Log.d(TAG,"onReceive entered");
+	        
+	        String action = intent.getAction(); 
+
+	        if (UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)) {
+	        	UsbAccessory accessory = UsbManager.getAccessory(intent);
+
+		        Log.d(TAG,"Accessory detached");	        	
+	        	
+	        	// TODO: Check it's us here?
+		        
+		        accessoryDetached = true;
+	        	
+	        	unregisterReceiver(mUsbReceiver);
+	        	
+	            if (accessory != null) {
+	                // TODO: call method to clean up and close communication with the accessory?
+	            }
+	        }
+	        
+	        Log.d(TAG,"onReceive exited");
+	    }
+	};
+	
+	
 	public BackgroundUsbService() {
 		super("BackgroundUsbService");
 	}
