@@ -4,7 +4,7 @@
 
 AndroidAccessory acc("rancidbacon.com",
 		     "BackgroundUsbDemo",
-		     "Background USB accessory demo",
+		     "Background USB Demo accessory",
 		     "0.1",
 		     "http://rancidbacon.com/",
 		     "0000000000000001");
