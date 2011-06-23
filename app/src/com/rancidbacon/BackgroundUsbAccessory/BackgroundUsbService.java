@@ -5,6 +5,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class BackgroundUsbService extends IntentService {
@@ -41,6 +42,12 @@ public class BackgroundUsbService extends IntentService {
 
 		Log.d(TAG, "onHandleIntent entered");
 
+		startForeground(NOTIFICATION_ID, getNotification());
+		
+		SystemClock.sleep(5000);
+		
+		stopForeground(true);
+		
 		Log.d(TAG, "onHandleIntent exited");		
 	}
 
