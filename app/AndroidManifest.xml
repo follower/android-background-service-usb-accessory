@@ -21,5 +21,9 @@
                 android:resource="@xml/accessory_filter" />
         </activity>
 
+        <service android:name=".BackgroundUsbService" android:process=":separate">
+
+        </service>
+
     </application>
 </manifest>
