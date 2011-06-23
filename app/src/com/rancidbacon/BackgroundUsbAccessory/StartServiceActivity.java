@@ -17,6 +17,7 @@ public class StartServiceActivity extends Activity {
         Log.d(TAG, "onCreate entered");
 
         Intent intent = new Intent(this, BackgroundUsbService.class);
+        intent.fillIn(getIntent(), 0); // TODO: Find better way to get extras for `UsbManager.getAccessory()` use?
         startService(intent);
 		
         // See:
