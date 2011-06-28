@@ -148,7 +148,7 @@ public class BackgroundUsbService extends IntentService {
 	
 	private Runnable mUpdateTimeTask = new Runnable() {
 		   public void run() {
-			   actionQueue.add(new DisplayText(new SimpleDateFormat("\nHH:mm:ss").format(new Date()), 0, 0));
+			   actionQueue.add(new DisplayText(new SimpleDateFormat("HH:mm:ss").format(new Date()), 0, 0));
 			   
 			   // TODO: Switch to taking account of start time with System.currentTimeMillis()
 			   //       a la <http://developer.android.com/resources/articles/timed-ui-updates.html>.
@@ -206,6 +206,7 @@ public class BackgroundUsbService extends IntentService {
 				
 				if (newAction != null) {
 					// TODO: Make use of x,y args here.
+					writeBytes(new byte[]{(byte) (newAction.getY()+1)});
 					writeBytes(newAction.getText().getBytes());
 				}
 			}		

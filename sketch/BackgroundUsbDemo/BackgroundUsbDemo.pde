@@ -37,6 +37,11 @@ void loop() {
   if (acc.isConnected()) {
     byte len = acc.read(msg, sizeof(msg), 1);
     if (len == 1) {
+#ifdef USE_LCD
+    if ((msg[0] == 0x01) || (msg[0] == 0x02)) {
+      lcd.setCursor(0, msg[0]-1);
+    } else 
+#endif
       if (msg[0] == '\n') {
 #ifdef USE_LCD
         lcd.clear();      
