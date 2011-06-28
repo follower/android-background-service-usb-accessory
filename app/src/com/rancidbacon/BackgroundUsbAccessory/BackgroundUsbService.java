@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import com.android.future.usb.UsbAccessory;
 import com.android.future.usb.UsbManager;
@@ -32,6 +34,33 @@ public class BackgroundUsbService extends IntentService {
 	private ParcelFileDescriptor mFileDescriptor;
 	private FileInputStream mInputStream;
 	private FileOutputStream mOutputStream;	
+	
+	public class DisplayText {
+		private String text;
+		private int x;
+		private int y;
+		
+		public DisplayText(String text, int x, int y) {
+			this.text = text;
+			
+			this.x = x;
+			this.y = y;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public int getX() {
+			return x;
+		}
+
+		public int getY() {
+			return y;
+		}
+	}
+	
+	private LinkedBlockingQueue<DisplayText> actionQueue = new LinkedBlockingQueue<DisplayText>();
 	
 	// We use this to catch the USB accessory detached message
 	private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
@@ -139,7 +168,17 @@ public class BackgroundUsbService extends IntentService {
 		    }
 			
 			while(true) {
-				// Wait until the accessory detachment is flagged
+				
+				try {
+					actionQueue.poll(1000, TimeUnit.MILLISECONDS);
+				} catch (InterruptedException e) { 
+		             // Restore the interrupted status
+					 // See: <http://www.ibm.com/developerworks/java/library/j-jtp05236/index.html>
+		             Thread.currentThread().interrupt();
+		        }
+				
+				// TODO: Allow us to be interrupted with this immediately?
+				// Check if the accessory detachment was flagged
 				if (accessoryDetached) {
 					break;
 				}
@@ -147,8 +186,6 @@ public class BackgroundUsbService extends IntentService {
 				// In reality we'd do stuff here.
 				
 				writeBytes(new SimpleDateFormat("\nHH:mm:ss").format(new Date()).getBytes());
-				
-				SystemClock.sleep(1000);
 			}		
 
 			// Without this clean-up code the app will work once but then
