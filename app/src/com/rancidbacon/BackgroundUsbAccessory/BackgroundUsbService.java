@@ -83,6 +83,33 @@ public class BackgroundUsbService extends IntentService {
 		
 		return notification;
 	}
+
+	void writeBytes(byte[]theStringBytes) {
+		/*
+		  
+		   Writes the supplied byte array to the output stream as one byte per USB packet.
+		   
+		   In addition to that functionality this acts as a convenience function
+		   that catches write errors.
+		    
+		 */
+		if (mOutputStream == null) {
+			return;
+		}
+		
+		try {
+			// We send one byte per packet because the Arduino sketch doesn't
+			// currently handle more than one--mainly because I don't know how
+			// to get the packet length and/or to read packet data in multiple
+			// passes.
+			for (int i = 0; i < theStringBytes.length; i++) {
+				mOutputStream.write(theStringBytes[i]);
+			}
+		}  catch (IOException e) {
+			// We can/should ignore the "no such device" error here if it means we've disconnected.
+			Log.e(TAG, "write failed", e);
+		}		
+	}
 	
 	@Override
 	protected void onHandleIntent(Intent theIntent) {
