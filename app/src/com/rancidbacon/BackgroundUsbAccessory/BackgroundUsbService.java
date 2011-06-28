@@ -1,5 +1,10 @@
 package com.rancidbacon.BackgroundUsbAccessory;
 
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import com.android.future.usb.UsbAccessory;
 import com.android.future.usb.UsbManager;
 
@@ -10,6 +15,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -20,6 +26,10 @@ public class BackgroundUsbService extends IntentService {
 	private static final int NOTIFICATION_ID = 1;    
     
 	private boolean accessoryDetached = false;
+
+	private ParcelFileDescriptor mFileDescriptor;
+	private FileInputStream mInputStream;
+	private FileOutputStream mOutputStream;	
 	
 	// We use this to catch the USB accessory detached message
 	private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
@@ -92,6 +102,13 @@ public class BackgroundUsbService extends IntentService {
 			IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
 			registerReceiver(mUsbReceiver, filter);
 
+		    mFileDescriptor = UsbManager.getInstance(this).openAccessory(accessory);
+		    if (mFileDescriptor != null) {
+		        FileDescriptor fd = mFileDescriptor.getFileDescriptor();
+		        mInputStream = new FileInputStream(fd);
+		        mOutputStream = new FileOutputStream(fd);
+		    }
+			
 			while(true) {
 				// Wait until the accessory detachment is flagged
 				if (accessoryDetached) {
@@ -102,6 +119,18 @@ public class BackgroundUsbService extends IntentService {
 				
 				SystemClock.sleep(10);
 			}		
+
+			// Without this clean-up code the app will work once but then
+			// won't start again until it's force-quit.
+			try {
+				if (mFileDescriptor != null) {
+					mFileDescriptor.close();
+				}
+			} catch (IOException e) {
+			} finally {
+				mFileDescriptor = null;
+				accessory = null;
+			}			
 			
 			stopForeground(true);
 			
