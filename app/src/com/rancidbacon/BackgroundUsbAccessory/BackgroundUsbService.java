@@ -19,9 +19,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.provider.ContactsContract.PhoneLookup;
+import android.telephony.SmsMessage;
 import android.text.format.Time;
 import android.util.Log;
 
@@ -184,6 +188,8 @@ public class BackgroundUsbService extends IntentService {
 		    mHandler.removeCallbacks(mUpdateTimeTask);
 		    mHandler.postDelayed(mUpdateTimeTask, 100);
 		    
+	    	registerReceiver(receiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
+		    
 		    DisplayText newAction = null;
 		    
 			while(true) {
@@ -212,6 +218,9 @@ public class BackgroundUsbService extends IntentService {
 			}		
 
 		    mHandler.removeCallbacks(mUpdateTimeTask);
+		    
+	    	unregisterReceiver(receiver);		    
+		    
 		    actionQueue.clear();
 
 			// Without this clean-up code the app will work once but then
@@ -237,4 +246,39 @@ public class BackgroundUsbService extends IntentService {
 		Log.d(TAG, "onHandleIntent exited");		
 	}
 
+	
+	private BroadcastReceiver receiver = new BroadcastReceiver () {
+
+		@Override
+		public void onReceive(Context arg0, Intent arg1) {
+			
+			Log.d("BackgroundSmsReceiver", "onReceive entered");
+
+			for (Object thePdu : (Object []) arg1.getExtras().get("pdus") ) {
+				SmsMessage theMessage = SmsMessage.createFromPdu((byte []) thePdu);
+				
+				Cursor managedCursor = getContentResolver().query(Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI, Uri.encode(theMessage.getOriginatingAddress())),
+						new String[]{PhoneLookup.DISPLAY_NAME},
+						null, null, null);
+				
+				String sender;
+				
+				if (managedCursor.moveToFirst()) {
+					sender = managedCursor.getString(managedCursor.getColumnIndex(PhoneLookup.DISPLAY_NAME));
+				} else {
+					sender = theMessage.getOriginatingAddress(); 
+				}
+				
+				Log.d("BackgroundSmsReceiver", "From: " + sender);
+				
+				actionQueue.add(new DisplayText((sender + ": " + theMessage.getMessageBody()).substring(0, 16), 0, 1));
+
+				Log.d("BackgroundSmsReceiver", theMessage.getMessageBody());				
+				
+				break; // We only care about the first one.
+			}
+			
+		}
+	};
+	
 }
