@@ -19,8 +19,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.text.format.Time;
 import android.util.Log;
 
 public class BackgroundUsbService extends IntentService {
@@ -142,6 +144,18 @@ public class BackgroundUsbService extends IntentService {
 		}		
 	}
 	
+	private Handler mHandler = new Handler();
+	
+	private Runnable mUpdateTimeTask = new Runnable() {
+		   public void run() {
+			   actionQueue.add(new DisplayText(new SimpleDateFormat("\nHH:mm:ss").format(new Date()), 0, 0));
+			   
+			   // TODO: Switch to taking account of start time with System.currentTimeMillis()
+			   //       a la <http://developer.android.com/resources/articles/timed-ui-updates.html>.
+		       mHandler.postAtTime(this, (int) ((SystemClock.uptimeMillis() / 1000) + 1) * 1000);
+		   }
+		};
+	
 	@Override
 	protected void onHandleIntent(Intent theIntent) {
 		
@@ -167,10 +181,15 @@ public class BackgroundUsbService extends IntentService {
 		        mOutputStream = new FileOutputStream(fd);
 		    }
 			
+		    mHandler.removeCallbacks(mUpdateTimeTask);
+		    mHandler.postDelayed(mUpdateTimeTask, 100);
+		    
+		    DisplayText newAction = null;
+		    
 			while(true) {
 				
 				try {
-					actionQueue.poll(1000, TimeUnit.MILLISECONDS);
+					newAction = actionQueue.poll(1000, TimeUnit.MILLISECONDS);
 				} catch (InterruptedException e) { 
 		             // Restore the interrupted status
 					 // See: <http://www.ibm.com/developerworks/java/library/j-jtp05236/index.html>
@@ -185,8 +204,14 @@ public class BackgroundUsbService extends IntentService {
 
 				// In reality we'd do stuff here.
 				
-				writeBytes(new SimpleDateFormat("\nHH:mm:ss").format(new Date()).getBytes());
+				if (newAction != null) {
+					// TODO: Make use of x,y args here.
+					writeBytes(newAction.getText().getBytes());
+				}
 			}		
+
+		    mHandler.removeCallbacks(mUpdateTimeTask);
+		    actionQueue.clear();
 
 			// Without this clean-up code the app will work once but then
 			// won't start again until it's force-quit.
