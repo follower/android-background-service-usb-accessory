@@ -4,6 +4,8 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import com.android.future.usb.UsbAccessory;
 import com.android.future.usb.UsbManager;
@@ -144,7 +146,9 @@ public class BackgroundUsbService extends IntentService {
 
 				// In reality we'd do stuff here.
 				
-				SystemClock.sleep(10);
+				writeBytes(new SimpleDateFormat("\nHH:mm:ss").format(new Date()).getBytes());
+				
+				SystemClock.sleep(1000);
 			}		
 
 			// Without this clean-up code the app will work once but then
