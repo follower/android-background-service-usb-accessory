@@ -1,1 +1,1 @@
- * Solve bug where SMS to self crashes in US.
+ * Solve bug where SMS to self crashes in US. Note: this happens on line 274 of app/src/com/rancidbacon/BackgroundUsbAccessory/BackgroundUsbService.java and is due to an index out of bounds exception because the name + message was too short. (Nothing to do with self or US messages at all.)
